@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}Runs · TestPilot {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orchestration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container orx-page">
+  <div class="orx-header">
+    <h1>Orchestration runs</h1>
+    <a href="{% url 'create_orchestration_run' %}" class="orx-btn orx-btn-primary">+ New run</a>
+  </div>
+
+  <div class="orx-section" style="margin-top: 24px;">
+    <table class="orx-table">
+      <thead>
+        <tr><th>Inquiry</th><th>Status</th><th>Started</th><th>Tokens</th></tr>
+      </thead>
+      <tbody id="orx-run-rows">
+        {% include "base/run_rows.html" %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function () {
+  const POLL_INTERVAL_MS = 4000;
+  const tbody = document.getElementById("orx-run-rows");
+  const partialUrl = "{% url 'run_list_partial' %}";
+  let timer = null;
+
+  function isActiveRow(tr) {
+    return tr.querySelector(".orx-status--pending, .orx-status--running") !== null;
+  }
+
+  async function refresh() {
+    try {
+      const res = await fetch(partialUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      tbody.innerHTML = data.html;
+      if (!data.has_active) {
+        stopPolling();
+      }
+    } catch (err) {
+      // Transient network hiccup — just try again on the next tick.
+    }
+  }
+
+  function startPolling() {
+    if (!timer) timer = setInterval(refresh, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  const hasActiveInitially = Array.from(tbody.querySelectorAll("tr")).some(isActiveRow);
+  if (hasActiveInitially) startPolling();
+
+  // Pause polling when the tab isn't visible, resume (with an immediate
+  // refresh) when it comes back, so we're not polling backgrounded tabs.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopPolling();
+    } else if (Array.from(tbody.querySelectorAll("tr")).some(isActiveRow)) {
+      refresh();
+      startPolling();
+    }
+  });
+})();
+</script>
+{% endblock %}

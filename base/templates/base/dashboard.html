@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Your orchestration runs</p>
+        </div>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="openRunModal"
+        >
+            + New Run
+        </button>
+    </div>
+
+
+    <!-- Existing runs -->
+    <section class="runs-section">
+
+        {% for run in runs %}
+            <a href="{% url 'run_detail' run.id %}" class="run-card-link">
+                <div class="run-card">
+                    <div>
+                        <strong>Run #{{ run.id }}</strong>
+
+                        <span class="status-badge status-{{ run.status|lower }}">
+                            {% if run.status|lower == "running" or run.status|lower == "in_progress" or run.status|lower == "pending" or run.status|lower == "queued" %}
+                                <span class="status-spinner" aria-hidden="true"></span>
+                            {% endif %}
+                            {{ run.status }}
+                        </span>
+                    </div>
+
+                    <div>
+                        {{ run.created_at }}
+                    </div>
+                </div>
+            </a>
+
+        {% empty %}
+
+            <p>No orchestration runs yet.</p>
+
+        {% endfor %}
+
+    </section>
+
+</div>
+
+
+<!-- Modal -->
+<div class="modal-overlay" id="runModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+            <h2>Create Orchestration Run</h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                id="closeRunModal"
+            >
+                &times;
+            </button>
+        </div>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-ghost"
+                    id="cancelRunModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Create Run
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+    const modal = document.getElementById("runModal");
+    const openButton = document.getElementById("openRunModal");
+    const closeButton = document.getElementById("closeRunModal");
+    const cancelButton = document.getElementById("cancelRunModal");
+
+    openButton.addEventListener("click", () => {
+        modal.classList.add("active");
+    });
+
+    closeButton.addEventListener("click", () => {
+        modal.classList.remove("active");
+    });
+
+    cancelButton.addEventListener("click", () => {
+        modal.classList.remove("active");
+    });
+
+    // Close when clicking the dark background
+    modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+            modal.classList.remove("active");
+        }
+    });
+
+    // Close with Escape
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            modal.classList.remove("active");
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% load humanize %}
+{% for run in runs %}
+<tr>
+  <td><a class="orx-link" href="{% url 'run_detail' run.id %}">{{ run.user_inquiry|truncatechars:70 }}</a></td>
+  <td>
+    <span class="orx-status orx-status--{{ run.status }}"><span class="orx-dot"></span>{{ run.get_status_display }}</span>
+    {% if run.status == "pending" or run.status == "running" %}
+    <div class="orx-progress orx-progress--{{ run.status }}" aria-hidden="true">
+      <div class="orx-progress-bar"></div>
+    </div>
+    {% endif %}
+  </td>
+  <td class="orx-tokens">{{ run.started_at|date:"M j, H:i"|default:"—" }}</td>
+  <td class="orx-tokens">{{ run.total_tokens|intcomma }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4" class="orx-empty">No runs yet.</td></tr>
+{% endfor %}

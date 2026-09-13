@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Orchestration Run{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/create_run.css' %}">
+{% endblock %}
+{% block content %}
+<div class="wizard-wrap">
+  <h1>Start Orchestration Run</h1>
+
+  <div class="progress" id="progress-bar"></div>
+
+  <form method="post" id="run-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- STEP: choose mode -->
+    <div class="step active" data-step="mode">
+      <p>How would you like to define this run?</p>
+      <div class="mode-cards">
+        <div class="mode-card" data-mode="custom">
+          <h3>Write your own prompt</h3>
+          <p>Go straight to a free-text box and describe exactly what you want tested.</p>
+        </div>
+        <div class="mode-card" data-mode="builder">
+          <h3>Use the prompt builder</h3>
+          <p>Answer a few quick questions and we'll assemble the prompt for you.</p>
+        </div>
+      </div>
+      <div class="wizard-nav">
+        <span></span>
+        <button type="button" class="btn-next" data-next="target" disabled>Next</button>
+      </div>
+    </div>
+
+    <!-- STEP: target url (shared by both paths) -->
+    <div class="step" data-step="target">
+      <div class="field-row">
+        <label for="{{ form.target_url.id_for_label }}">Target URL</label>
+        {{ form.target_url }}
+        {% for error in form.target_url.errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+      <div class="wizard-nav">
+        <button type="button" class="btn-secondary btn-back">Back</button>
+        <button type="button" class="btn-next">Next</button>
+      </div>
+    </div>
+
+    <!-- STEP: custom prompt path -->
+    <div class="step" data-step="custom-prompt">
+    <div class="field-row">
+        <label for="{{ form.user_inquiry.id_for_label }}">What would you like to test?</label>
+        <div id="custom-field-slot">{{ form.user_inquiry }}</div>
+        {% for error in form.user_inquiry.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+      <div class="wizard-nav">
+        <button type="button" class="btn-secondary btn-back">Back</button>
+        <button type="submit">Start Run</button>
+      </div>
+    </div>
+
+    <!-- STEP: builder - what to test -->
+    <div class="step" data-step="test-type">
+      <div class="field-row">
+        <label>What do you want to test?</label>
+        <div class="checkbox-grid" id="test-type-grid">
+          <label><input type="checkbox" value="Login flow"> Login flow</label>
+          <label><input type="checkbox" value="User Registration"> User Registration</label>
+          <label><input type="checkbox" value="Accessibility"> Accessibility</label>
+          <label><input type="checkbox" value="Responsive / mobile layout"> Responsive layout</label>
+          <label><input type="checkbox" value="Broken links / 404s"> Broken links</label>
+          <label><input type="checkbox" id="test-type-custom-toggle" value="Custom"> Custom</label>
+        </div>
+      </div>
+      <div class="field-row hidden" id="custom-detail-row">
+        <label for="custom-detail-text">Describe what you want tested</label>
+        <textarea id="custom-detail-text" rows="4" placeholder="e.g. verify the coupon code field rejects expired codes"></textarea>
+      </div>
+      <div class="wizard-nav">
+        <button type="button" class="btn-secondary btn-back">Back</button>
+        <button type="button" class="btn-next" id="test-type-next" disabled>Next</button>
+      </div>
+    </div>
+
+    <!-- STEP: builder - agent execution settings -->
+    <div class="step" data-step="agents">
+      <div class="two-col">
+        <div class="field-row">
+          <label for="executor-count">Executor agents at a time</label>
+          <input type="number" id="executor-count" min="1" max="10" value="2">
+        </div>
+        <div class="field-row">
+          <label for="round-count">Number of rounds</label>
+          <input type="number" id="round-count" min="1" max="10" value="2">
+        </div>
+      </div>
+      <div class="field-row">
+        <label for="extra-notes">Anything else the agents should know? (optional)</label>
+        <textarea id="extra-notes" rows="3" placeholder="e.g. test credentials, pages to skip, tone of report"></textarea>
+      </div>
+      <div class="wizard-nav">
+        <button type="button" class="btn-secondary btn-back">Back</button>
+        <button type="button" class="btn-next" data-next="review">Next</button>
+      </div>
+    </div>
+
+    <!-- STEP: builder - review generated prompt -->
+    <div class="step" data-step="review">
+    <div class="field-row">
+        <label for="{{ form.user_inquiry.id_for_label }}">Generated prompt (edit if needed)</label>
+        <div id="review-field-slot"></div>
+        {% for error in form.user_inquiry.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    <div class="wizard-nav">
+        <button type="button" class="btn-secondary btn-back">Back</button>
+        <button type="submit">Start Run</button>
+    </div>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  const targetUrlField = document.getElementById("{{ form.target_url.id_for_label }}");
+  const userInquiryField = document.getElementById("{{ form.user_inquiry.id_for_label }}");
+  const customFieldSlot = document.getElementById("custom-field-slot");
+  const reviewFieldSlot = document.getElementById("review-field-slot");
+  let mode = null; // 'custom' | 'builder'
+  const pathSteps = {
+    custom: ["mode", "target", "custom-prompt"],
+    builder: ["mode", "target", "test-type", "agents", "review"],
+  };
+  let currentIndex = 0;
+
+  const steps = document.querySelectorAll(".step");
+  const progressBar = document.getElementById("progress-bar");
+
+  function activePath() {
+    return mode ? pathSteps[mode] : ["mode"];
+  }
+
+  function renderProgress() {
+    const path = activePath();
+    progressBar.innerHTML = "";
+    path.forEach((_, i) => {
+      const dot = document.createElement("span");
+      if (i <= currentIndex) dot.classList.add("active");
+      progressBar.appendChild(dot);
+    });
+  }
+
+  function showStep(stepId) {
+    steps.forEach((s) => s.classList.toggle("active", s.dataset.step === stepId));
+    currentIndex = activePath().indexOf(stepId);
+    renderProgress();
+  }
+
+  // --- Mode selection ---
+  const modeCards = document.querySelectorAll(".mode-card");
+  const modeNextBtn = document.querySelector('[data-step="mode"] .btn-next');
+
+  modeCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      modeCards.forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+      mode = card.dataset.mode;
+      modeNextBtn.disabled = false;
+    });
+  });
+
+  // --- Generic Next buttons (those with explicit data-next) ---
+  document.querySelectorAll(".btn-next[data-next]").forEach((btn) => {
+    btn.addEventListener("click", () => showStep(btn.dataset.next));
+  });
+
+  // The "target" step's Next button routes depending on mode
+  document.querySelector('[data-step="target"] .btn-next').addEventListener("click", () => {
+    if (!targetUrlField.value.trim()) {
+      targetUrlField.focus();
+      return;
+    }
+    showStep(mode === "custom" ? "custom-prompt" : "test-type");
+  });
+
+  // --- Back buttons: walk backwards through the active path ---
+  document.querySelectorAll(".btn-back").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const path = activePath();
+      const idx = path.indexOf(document.querySelector(".step.active").dataset.step);
+      showStep(path[Math.max(0, idx - 1)]);
+    });
+  });
+
+  // --- Test-type step: custom toggle + enable Next once something is chosen ---
+  const testTypeGrid = document.getElementById("test-type-grid");
+  const customToggle = document.getElementById("test-type-custom-toggle");
+  const customDetailRow = document.getElementById("custom-detail-row");
+  const testTypeNext = document.getElementById("test-type-next");
+
+  function refreshTestTypeState() {
+    const checked = testTypeGrid.querySelectorAll("input:checked");
+    testTypeNext.disabled = checked.length === 0;
+    customDetailRow.classList.toggle("hidden", !customToggle.checked);
+  }
+
+  testTypeGrid.querySelectorAll("input").forEach((cb) => {
+    cb.addEventListener("change", refreshTestTypeState);
+  });
+
+  testTypeNext.addEventListener("click", () => showStep("agents"));
+
+  document.querySelector('[data-step="agents"] .btn-next').addEventListener("click", () => {
+  reviewFieldSlot.appendChild(userInquiryField); // move the real field into view
+  userInquiryField.value = buildPrompt();
+});
+
+// If the user can navigate back to "mode" and switch to custom, move it back
+document.querySelector('[data-mode="custom"]').addEventListener("click", () => {
+  customFieldSlot.appendChild(userInquiryField);
+});
+
+  // --- Build the final prompt when entering the review step ---
+  function buildPrompt() {
+    const selectedTypes = Array.from(
+      testTypeGrid.querySelectorAll("input:checked:not(#test-type-custom-toggle)")
+    ).map((cb) => cb.value);
+
+    const customDetail = document.getElementById("custom-detail-text").value.trim();
+    const executorCount = document.getElementById("executor-count").value || "1";
+    const roundCount = document.getElementById("round-count").value || "1";
+    const extraNotes = document.getElementById("extra-notes").value.trim();
+
+    const lines = [];
+
+    if (selectedTypes.length) {
+      lines.push(`Test focus: ${selectedTypes.join(", ")}.`);
+    }
+    if (customToggle.checked && customDetail) {
+      lines.push(`Custom instructions: ${customDetail}`);
+    }
+    if (extraNotes) {
+      lines.push(`Additional context: ${extraNotes}`);
+    }
+    lines.push(
+      `Execution settings: run ${executorCount} executor agent(s) at a time, across ${roundCount} round(s).`
+    );
+
+    return lines.join("\n");
+  }
+
+  // Intercept the Next button that leads into "review" to populate the field first
+  document.querySelector('[data-step="agents"] .btn-next').addEventListener("click", () => {
+    userInquiryField.value = buildPrompt();
+  });
+
+  showStep("mode");
+})();
+</script>
+{% endblock %}

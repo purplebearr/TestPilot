@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}TestPilot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <span class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Now in open beta
+    </span>
+
+    <h1>Agentic QA Tester.</h1>
+
+    <p class="lede">
+        TestPilot is an agentic QA testing tool that uses AI to automatically test your web applications.
+    </p>
+
+    <div class="hero-actions">
+        {% if user.is_authenticated %}
+            <a href="{% url 'run_list' %}" class="btn btn-primary">Go to Dashboard</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+            <a href="{% url 'login' %}" class="btn btn-ghost">Log in</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

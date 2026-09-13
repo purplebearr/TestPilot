@@ -1,0 +1,35 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<header class="navbar">
+    <div class="navbar-inner">
+        <a href="{% url 'home' %}" class="brand">
+            <span class="brand-mark"><span class="brand-mark-dot"></span></span>
+            TestPilot
+        </a>
+
+        <div class="nav-actions">
+            {% if user.is_authenticated %}
+                <a href="{% url 'run_list' %}" class="btn btn-ghost">Dashboard</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-ghost">Log in</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Get started</a>
+            {% endif %}
+
+            <button class="nav-toggle" data-nav-toggle aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <nav class="nav-mobile">
+        <a href="{% url 'home' %}#features">Features</a>
+        <a href="{% url 'home' %}#pricing">Pricing</a>
+        <a href="{% url 'home' %}#docs">Docs</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'run_list' %}">Dashboard</a>
+        {% else %}
+            <a href="{% url 'login' %}">Log in</a>
+            <a href="{% url 'register' %}">Get started</a>
+        {% endif %}
+    </nav>
+</header>

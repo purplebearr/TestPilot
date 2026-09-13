@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static humanize orx_extras %}
+
+{% block title %}Round {{ task_set.round_number }} · TestPilot {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orchestration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container orx-page">
+  <div class="orx-crumbs">
+    <a href="{% url 'run_list' %}" >Runs</a>
+    <span class="orx-sep">/</span>
+    <a href="{% url 'run_detail' task_set.orchestration_run_id %}" >{{ task_set.orchestration_run_id }}</a>
+    <span class="orx-sep">/</span>
+    <span class="orx-current">Round {{ task_set.round_number }}</span>
+  </div>
+
+  <div class="orx-header">
+    <h1>Round {{ task_set.round_number }}</h1>
+    <div class="orx-target">{{ task_set.prompt }}</div>
+  </div>
+
+  <div class="orx-stat-row">
+    <div class="orx-stat">
+      <div class="orx-label">Status</div>
+      <div class="orx-value"><span class="orx-status orx-status--{{ task_set.status }}"><span class="orx-dot"></span>{{ task_set.get_status_display }}</span></div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Agents</div>
+      <div class="orx-value">{{ task_set.num_agents_spawned }} / {{ task_set.num_agents_requested }} requested</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Tokens</div>
+      <div class="orx-value">{{ task_set.input_tokens|intcomma }} in / {{ task_set.output_tokens|intcomma }} out</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Completed</div>
+      <div class="orx-value">{{ task_set.completed_at|date:"M j, H:i"|default:"—" }}</div>
+    </div>
+  </div>
+
+  {% if task_set.synthesized_summary %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Synthesized summary</h2>
+    <div class="orx-report-body">{{ task_set.synthesized_summary|markdownify }}</div>
+  </div>
+  {% endif %}
+
+  {% if round_screenshots %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Screenshots</h2>
+    <div class="orx-filmstrip">
+      {% for shot in round_screenshots %}
+      <a class="orx-frame" 
+         href="{% url 'executor_detail' task_set.orchestration_run_id task_set.id shot.executor_run_id %}#step-{{ shot.step_number }}">
+        <img src="{{ shot.image.url }}" alt="{{ shot.caption|default:'Screenshot' }}" loading="lazy">
+        <div class="orx-frame-meta"><span class="orx-step">agent {{ shot.executor_run.index }} · #{{ shot.step_number }}</span></div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="orx-section">
+    <h2 class="orx-section-label">Executor agents</h2>
+    <table class="orx-table">
+      <thead>
+        <tr><th class="orx-idx">#</th><th>Status</th><th>Persona</th><th>Tokens</th><th>Links</th></tr>
+      </thead>
+      <tbody>
+        {% for exec in task_set.executor_runs.all %}
+        <tr>
+          <td class="orx-idx">{{ exec.index }}</td>
+          <td><span class="orx-status orx-status--{{ exec.status }}"><span class="orx-dot"></span>{{ exec.get_status_display }}</span></td>
+          <td class="orx-persona-tag">{{ exec.persona.name|default:"—" }}</td>
+          <td class="orx-tokens">{{ exec.input_tokens|add:exec.output_tokens|intcomma }}</td>
+          <td class="orx-links">
+            <a class="orx-link" href="{% url 'executor_detail' task_set.orchestration_run_id task_set.id exec.id %}">Overview</a>
+            <a class="orx-link"  href="{% url 'executor_detail' task_set.orchestration_run_id task_set.id exec.id %}#log">Log</a>
+            <a class="orx-link"  href="{% url 'executor_detail' task_set.orchestration_run_id task_set.id exec.id %}#screenshots">Screenshots ({{ exec.screenshots.count }})</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="orx-empty">No executor agents were spawned in this round.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

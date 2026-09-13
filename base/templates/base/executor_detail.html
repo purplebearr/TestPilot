@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static humanize orx_extras %}
+
+{% block title %}Agent {{ executor.index }} · TestPilot {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orchestration.css' %}">
+<style>
+  /* Lightbox — consider moving this into orchestration.css */
+  .orx-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    cursor: zoom-out;
+  }
+  .orx-lightbox--active {
+    display: flex;
+  }
+  .orx-lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+  }
+  .orx-lightbox-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.5rem;
+    color: #fff;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .orx-lightbox-close:hover {
+    opacity: 1;
+  }
+  .orx-lightbox-caption {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #eee;
+    font-size: 0.9rem;
+  }
+  .orx-frame img,
+  .orx-log-thumbs img {
+    cursor: zoom-in;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container orx-page">
+  <div class="orx-crumbs">
+    <a href="{% url 'run_list' %}">Runs</a>
+    <span class="orx-sep">/</span>
+    <a href="{% url 'run_detail' executor.task_set.orchestration_run_id %}">{{ executor.task_set.orchestration_run_id }}</a>
+    <span class="orx-sep">/</span>
+    <a href="{% url 'task_set_detail' executor.task_set.orchestration_run_id executor.task_set_id %}">Round {{ executor.task_set.round_number }}</a>
+    <span class="orx-sep">/</span>
+    <span class="orx-current">Agent {{ executor.index }}</span>
+  </div>
+
+  <div class="orx-header">
+    <h1>Agent {{ executor.index }}</h1>
+    <div class="orx-target">{{ executor.prompt }}</div>
+    {% if executor.persona %}
+    <div class="orx-persona-banner">Persona: {{ executor.persona.name }} — {{ executor.persona.description }}</div>
+    {% endif %}
+  </div>
+
+  <div class="orx-stat-row">
+    <div class="orx-stat">
+      <div class="orx-label">Status</div>
+      <div class="orx-value"><span class="orx-status orx-status--{{ executor.status }}"><span class="orx-dot"></span>{{ executor.get_status_display }}</span></div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Started</div>
+      <div class="orx-value">{{ executor.started_at|date:"H:i:s"|default:"—" }}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Duration</div>
+      <div class="orx-value">{% if executor.started_at and executor.completed_at %}{{ executor.completed_at|timeuntil:executor.started_at }}{% else %}—{% endif %}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Tokens</div>
+      <div class="orx-value">{{ executor.input_tokens|intcomma }} in / {{ executor.output_tokens|intcomma }} out</div>
+    </div>
+  </div>
+
+  {% if executor.status == 'failed' or executor.status == 'missing_output' %}
+  {% if executor.error_message %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Error</h2>
+    <div class="orx-report-body orx-report-body--error">{{ executor.error_message }}</div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% if executor.summary_text %}
+  <div class="orx-section" id="summary">
+    <h2 class="orx-section-label">Summary</h2>
+    <div class="orx-summary-text">{{ executor.summary_text|markdownify }}</div>
+  </div>
+  {% endif %}
+
+  <div class="orx-section" id="screenshots">
+    <h2 class="orx-section-label">Screenshots</h2>
+    {% if executor.screenshots.all %}
+    <div class="orx-filmstrip">
+      {% for shot in executor.screenshots.all %}
+      <div class="orx-frame" id="step-{{ shot.step_number }}">
+        <img src="{{ shot.image.url }}" alt="{{ shot.caption|default:'Screenshot' }}" loading="lazy"
+             onclick="openLightbox(this.src, this.alt)">
+        <div class="orx-frame-meta">
+          <span class="orx-step">#{{ shot.step_number }}</span>
+          {% if shot.caption %} · {{ shot.caption }}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="orx-empty">This agent did not capture any screenshots.</p>
+    {% endif %}
+  </div>
+
+  <div class="orx-section" id="log">
+    <h2 class="orx-section-label">Execution log</h2>
+    {% if log_steps %}
+    <div class="orx-log">
+      {% for step in log_steps %}
+      <div class="orx-log-step {% if step.status != 'success' %}orx-log-step--error{% endif %}">
+        <span class="orx-n">{{ step.step }}</span>
+        <span class="orx-t">{{ step.timestamp|slice:"11:19" }}</span>
+        <span class="orx-action">{{ step.action }}</span>
+        <span class="orx-desc">
+          {{ step.description }}
+          {% if step.status != 'success' %}<span class="orx-step-status">{{ step.status }}</span>{% endif %}
+        </span>
+        <span class="orx-log-thumbs">
+          {% for shot in step.screenshot_objs %}
+          <a href="#step-{{ shot.step_number }}"><img src="{{ shot.image.url }}" alt=""
+             onclick="event.preventDefault(); openLightbox(this.src, this.alt || 'Screenshot')"></a>
+          {% endfor %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="orx-empty">No execution log was recorded for this agent.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div id="orx-lightbox" class="orx-lightbox" onclick="closeLightbox()">
+  <span class="orx-lightbox-close" onclick="closeLightbox()">&times;</span>
+  <img id="orx-lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+  <div class="orx-lightbox-caption" id="orx-lightbox-caption"></div>
+</div>
+
+<script>
+  function openLightbox(src, caption) {
+    const lightbox = document.getElementById('orx-lightbox');
+    document.getElementById('orx-lightbox-img').src = src;
+    document.getElementById('orx-lightbox-caption').textContent = caption || '';
+    lightbox.classList.add('orx-lightbox--active');
+  }
+
+  function closeLightbox() {
+    document.getElementById('orx-lightbox').classList.remove('orx-lightbox--active');
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Log in — TestPilot {% endblock %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-head">
+            <h1>Welcome back</h1>
+            <p>Log in to your TestPilot workspace</p>
+        </div>
+
+        <div id="form-message" class="form-message"></div>
+
+        <!--
+            hx-post targets this same view. On success, have the view
+            respond with an HX-Redirect header (or a 302) to send the
+            user to the dashboard. On failure, return the form partial
+            again with #form-message rendered with class="error".
+        -->
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-primary btn-block">Log in</button>
+        </form>
+
+        <p class="auth-foot">
+            Don't have an account? <a href="{% url 'register' %}">Sign up</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

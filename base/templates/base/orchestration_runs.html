@@ -1,0 +1,94 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/orchestration_runs.css' %}">
+{% if runs %}
+
+<div class="runs-list">
+
+    {% for run in runs %}
+
+    <div class="run-card">
+
+        <div class="run-main">
+
+            <div class="run-title">
+                {{ run.user_inquiry }}
+            </div>
+
+            {% if run.target_url %}
+                <div class="run-url">
+                    {{ run.target_url }}
+                </div>
+            {% endif %}
+
+            <div class="run-meta">
+                <span>
+                    Created {{ run.created_at|date:"M j, Y g:i A" }}
+                </span>
+
+                {% if run.started_at %}
+                    <span>
+                        Started {{ run.started_at|date:"g:i:s A" }}
+                    </span>
+                {% endif %}
+
+                {% if run.completed_at %}
+                    <span>
+                        Completed {{ run.completed_at|date:"g:i:s A" }}
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="run-status">
+
+            {% if run.status == "pending" %}
+
+                <span class="status status-pending">
+                    <span class="status-dot"></span>
+                    Pending
+                </span>
+
+            {% elif run.status == "running" %}
+
+                <span class="status status-running">
+                    <span class="status-dot"></span>
+                    Running
+                </span>
+
+            {% elif run.status == "succeeded" %}
+
+                <span class="status status-succeeded">
+                    <span class="status-dot"></span>
+                    Completed
+                </span>
+
+            {% elif run.status == "failed" %}
+
+                <span class="status status-failed">
+                    <span class="status-dot"></span>
+                    Failed
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <h2>No orchestration runs yet</h2>
+    <p>Create your first orchestration run to get started.</p>
+
+    <a href="{% url 'create_orchestration_run' %}" class="btn">
+        Create Orchestration Run
+    </a>
+</div>
+
+{% endif %}

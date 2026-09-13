@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static humanize orx_extras %}
+
+{% block title %}{{ run.user_inquiry|truncatechars:60 }} · TestPilot {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orchestration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container orx-page">
+  <div class="orx-crumbs">
+    <a href="{% url 'run_list' %}">Runs</a>
+    <span class="orx-sep">/</span>
+    <span class="orx-current">{{ run.id }}</span>
+  </div>
+
+  <div class="orx-header">
+    <h1>{{ run.user_inquiry }}</h1>
+    {% if run.target_url %}<div class="orx-target">{{ run.target_url }}</div>{% endif %}
+  </div>
+
+  <div class="orx-stat-row">
+    <div class="orx-stat">
+      <div class="orx-label">Status</div>
+      <div class="orx-value">
+        <span class="orx-status orx-status--{{ run.status }}"><span class="orx-dot"></span>{{ run.get_status_display }}</span>
+      </div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Started</div>
+      <div class="orx-value">{{ run.started_at|date:"M j, H:i"|default:"—" }}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Duration</div>
+      <div class="orx-value">{% if run.started_at and run.completed_at %}{{ run.completed_at|timeuntil:run.started_at }}{% else %}—{% endif %}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Model</div>
+      <div class="orx-value">{{ run.model_id|default:"—" }}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Tokens (total)</div>
+      <div class="orx-value">{{ run.total_tokens|intcomma }}</div>
+    </div>
+    <div class="orx-stat">
+      <div class="orx-label">Task sets</div>
+      <div class="orx-value">{{ run.task_sets.count }}</div>
+    </div>
+  </div>
+
+  {% if run.status == 'failed' and run.error_message %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Error</h2>
+    <div class="orx-report-body orx-report-body--error">{{ run.error_message }}</div>
+  </div>
+  {% endif %}
+
+  {% if run.final_report %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Final report</h2>
+    <div class="orx-report-body orx-report-body--markdown">{{ run.final_report|markdownify }}</div>
+  </div>
+  {% endif %}
+
+  {% if highlight_screenshots %}
+  <div class="orx-section">
+    <h2 class="orx-section-label">Screenshots</h2>
+    <div class="orx-filmstrip">
+      {% for shot in highlight_screenshots %}
+      <a class="orx-frame"
+         href="{% url 'executor_detail' shot.executor_run.task_set.orchestration_run_id shot.executor_run.task_set_id shot.executor_run_id %}#step-{{ shot.step_number }}">
+        <img src="{{ shot.image.url }}" alt="{{ shot.caption|default:'Screenshot' }}" loading="lazy">
+        <div class="orx-frame-meta">
+          <span class="orx-step">#{{ shot.step_number }}</span>
+          {% if shot.caption %} · {{ shot.caption|truncatechars:34 }}{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="orx-section">
+    <h2 class="orx-section-label">Task sets</h2>
+    {% for task_set in run.task_sets.all %}
+    <div class="orx-round">
+      <div class="orx-round-head">
+        <div class="orx-round-title">
+          <span class="orx-round-index">Round {{ task_set.round_number }}</span>
+          <span class="orx-status orx-status--{{ task_set.status }}"><span class="orx-dot"></span>{{ task_set.get_status_display }}</span>
+        </div>
+        <div class="orx-round-meta">{{ task_set.num_agents_spawned }}/{{ task_set.num_agents_requested }} agents · {{ task_set.input_tokens|add:task_set.output_tokens|intcomma }} tok</div>
+      </div>
+      <div class="orx-round-prompt">{{ task_set.prompt|truncatechars:180 }}</div>
+      {% if task_set.synthesized_summary %}
+      <div class="orx-round-summary">{{ task_set.synthesized_summary|truncatewords:60|markdownify }}</div>
+      {% endif %}
+      <div class="orx-round-foot">
+        <a class="btn btn-ghost" href="{% url 'task_set_detail' run.id task_set.id %}">
+          View round {{ task_set.round_number }} — {{ task_set.executor_runs.count }} executor{{ task_set.executor_runs.count|pluralize }} →
+        </a>
+      </div>
+    </div>
+    {% empty %}
+    <p class="orx-empty">No task sets were spawned for this run.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
