@@ -1,0 +1,445 @@
+/* =========================================================
+   Run-review pages
+   Built entirely on the tokens already defined in base.css
+   (--bg, --surface, --border, --text, --neon, --font-mono, etc).
+   Only net-new tokens are added here. All classes are
+   "orx-" prefixed so nothing collides with the rest of the site.
+   ========================================================= */
+
+:root {
+  /* base.css has --neon for "good" and --fail-text/--fail for "bad",
+     but nothing for a middle "partial" state -- the one addition
+     this file needs. */
+  --warn: #e5a72e;
+  --warn-soft: rgba(229, 167, 46, 0.12);
+}
+
+.orx-page {
+  padding: 40px 24px 96px;
+}
+
+/* ---------------------------------------------------------
+   Wayfinding
+--------------------------------------------------------- */
+.orx-crumbs {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-faint);
+  margin-bottom: 28px;
+}
+.orx-crumbs a { color: var(--text-muted); }
+.orx-crumbs a:hover { color: var(--neon); }
+.orx-crumbs .orx-sep { margin: 0 8px; color: var(--border); }
+.orx-crumbs .orx-current { color: var(--text); }
+
+/* ---------------------------------------------------------
+   Page header
+--------------------------------------------------------- */
+.orx-header h1 {
+  font-size: 26px;
+  max-width: 46ch;
+  margin-bottom: 8px;
+}
+.orx-header .orx-target {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+.orx-persona-banner {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  margin-top: 14px;
+  max-width: 60ch;
+}
+
+/* ---------------------------------------------------------
+   Status -- dot + label, three tones mapped onto the
+   existing palette (neon = good, fail-text = bad, warn = new)
+--------------------------------------------------------- */
+.orx-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.orx-status .orx-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.orx-status--succeeded { color: var(--neon); }
+.orx-status--succeeded .orx-dot { background: var(--neon); box-shadow: 0 0 6px 1px var(--neon-glow); }
+
+.orx-status--running { color: var(--neon); }
+.orx-status--running .orx-dot {
+  background: var(--neon);
+  box-shadow: 0 0 6px 1px var(--neon-glow);
+  animation: orx-blink 2.4s ease-in-out infinite;
+}
+@keyframes orx-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.orx-status--failed,
+.orx-status--missing_output { color: var(--fail-text); }
+.orx-status--failed .orx-dot,
+.orx-status--missing_output .orx-dot { background: var(--fail-text); }
+
+.orx-status--partial { color: var(--warn); }
+.orx-status--partial .orx-dot { background: var(--warn); }
+
+.orx-status--pending { color: var(--text-faint); }
+.orx-status--pending .orx-dot { background: var(--text-faint); }
+
+/* ---------------------------------------------------------
+   Stat row -- plain key/value, hairline dividers
+--------------------------------------------------------- */
+.orx-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 28px;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+.orx-stat {
+  padding: 16px 24px 16px 0;
+  margin-right: 24px;
+}
+.orx-stat:not(:last-child) { border-right: 1px solid var(--border-soft); }
+.orx-stat .orx-label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+.orx-stat .orx-value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------
+   Section scaffolding -- a quiet label, not a full h2
+--------------------------------------------------------- */
+.orx-section { margin-top: 48px; }
+h2.orx-section-label {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.orx-report-body {
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 62ch;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.orx-report-body p { color: var(--text); margin: 0 0 1em; }
+.orx-report-body--error { color: var(--fail-text); }
+
+/* ---------------------------------------------------------
+   Screenshot filmstrip
+--------------------------------------------------------- */
+.orx-filmstrip {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin: 0 -2px;
+}
+.orx-filmstrip::-webkit-scrollbar { height: 6px; }
+.orx-filmstrip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.orx-frame { flex: 0 0 auto; width: 208px; }
+.orx-frame img {
+  width: 208px;
+  height: 132px;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.orx-frame:hover img { border-color: var(--neon); }
+.orx-frame .orx-frame-meta {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.orx-frame .orx-frame-meta .orx-step {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+}
+
+/* ---------------------------------------------------------
+   Round (task set) blocks
+--------------------------------------------------------- */
+.orx-round {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  margin-bottom: 14px;
+}
+.orx-round-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.orx-round-head .orx-round-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.orx-round-head .orx-round-title .orx-round-index {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  font-weight: 400;
+  margin-right: 10px;
+}
+.orx-round-head .orx-round-meta {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.orx-round-prompt {
+  padding: 0 20px 14px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 62ch;
+}
+.orx-round-summary {
+  padding: 14px 20px 18px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  max-width: 62ch;
+  border-top: 1px solid var(--border-soft);
+}
+.orx-round-foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ---------------------------------------------------------
+   Executor table -- sequential index, so a table not a card grid
+--------------------------------------------------------- */
+.orx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.orx-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-faint);
+  padding: 0 12px 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.orx-table td {
+  padding: 14px 12px 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  color: var(--text);
+}
+.orx-table tr:last-child td { border-bottom: none; }
+.orx-table .orx-idx { font-family: var(--font-mono); color: var(--text-faint); width: 28px; }
+.orx-table .orx-persona-tag { color: var(--text-muted); font-size: 13.5px; }
+.orx-table .orx-tokens { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+.orx-table .orx-links a { margin-right: 16px; font-size: 13px; }
+
+/* Inline text links inside content (base.css neutralizes <a> by default) */
+.orx-link { color: var(--neon); }
+.orx-link:hover { color: var(--neon-hover); text-decoration: underline; }
+
+/* ---------------------------------------------------------
+   Executor summary text
+--------------------------------------------------------- */
+.orx-summary-text {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-wrap;
+  max-width: 66ch;
+}
+
+/* ---------------------------------------------------------
+   Execution log -- monospace, terminal-adjacent panel
+--------------------------------------------------------- */
+.orx-log {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 20px;
+  box-shadow: var(--shadow-1);
+}
+.orx-log-step {
+  grid-template-columns: 22px 66px 190px 1fr auto;
+  align-items: start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.orx-log-step .orx-action {
+  font-family: var(--font-mono);
+  color: var(--neon);
+  font-size: 12.5px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.orx-log-step .orx-desc {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.55;
+  min-width: 0;
+}
+.orx-log-thumbs {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.orx-log-step:last-child { border-bottom: none; }
+.orx-log-step .orx-n { font-family: var(--font-mono); color: var(--text-faint); font-size: 12px; }
+.orx-log-step .orx-t { font-family: var(--font-mono); color: var(--text-faint); font-size: 12px; }
+.orx-log-step .orx-action { font-family: var(--font-mono); color: var(--neon); font-size: 12.5px; }
+.orx-log-step.orx-log-step--error .orx-action { color: var(--fail-text); }
+.orx-log-step .orx-desc { font-size: 13.5px; color: var(--text); line-height: 1.55; }
+.orx-log-step .orx-step-status {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fail-text);
+}
+.orx-log-thumbs { display: flex; gap: 4px; }
+.orx-log-thumbs img {
+  width: 44px;
+  height: 28px;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.orx-empty { color: var(--text-faint); font-size: 13.5px; }
+
+.orx-report-body--markdown pre {
+  background: var(--surface-2, #f5f5f5);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.orx-report-body--markdown code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.9em;
+}
+.orx-report-body--markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+}
+.orx-report-body--markdown th,
+.orx-report-body--markdown td {
+  border: 1px solid var(--border, #ddd);
+  padding: 0.4rem 0.6rem;
+}
+.orx-report-body--markdown blockquote {
+  border-left: 3px solid var(--border, #ddd);
+  margin-left: 0;
+  padding-left: 1rem;
+  color: var(--text-muted, #666);
+}
+
+.orx-progress {
+  margin-top: 6px;
+  height: 4px;
+  width: 100px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.orx-progress-bar {
+  height: 100%;
+  width: 40%;
+  border-radius: 2px;
+  animation: orx-progress-slide 1.2s ease-in-out infinite;
+}
+
+.orx-progress--pending .orx-progress-bar {
+  background: linear-gradient(90deg, transparent, #a1a1aa, transparent);
+}
+
+.orx-progress--running .orx-progress-bar {
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+}
+.orx-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+/* ---------------------------------------------------------
+   Buttons
+--------------------------------------------------------- */
+.orx-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+.orx-btn:hover {
+  border-color: var(--neon);
+  color: var(--neon);
+}
+
+.orx-btn-primary {
+  border-color: var(--neon);
+  color: var(--neon);
+}
+.orx-btn-primary:hover {
+  box-shadow: 0 0 8px 1px var(--neon-glow);
+  color: var(--neon-hover, var(--neon));
+}
+@keyframes orx-progress-slide {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+
+@media (max-width: 760px) {
+  .orx-stat-row { border: none; }
+  .orx-stat { border-right: none !important; width: 50%; padding-right: 12px; }
+  .orx-table thead { display: none; }
+  .orx-table, .orx-table tbody, .orx-table tr, .orx-table td { display: block; width: 100%; }
+  .orx-table tr { padding: 14px 0; border-bottom: 1px solid var(--border-soft); }
+  .orx-table td { border-bottom: none; padding: 3px 0; }
+  .orx-log-step { grid-template-columns: 1fr; gap: 4px; }
+}

@@ -1,0 +1,236 @@
+ css
+/* =========================================================
+   Orchestration Runs
+   ========================================================= */
+
+.runs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Run card ------------------------------------------------ */
+
+.run-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+
+    padding: 20px 22px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    box-shadow: var(--shadow-1);
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.run-card:hover {
+    background: var(--surface-2);
+    border-color: #2b4034;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-2);
+}
+
+/* Main content ------------------------------------------- */
+
+.run-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.run-title {
+    margin-bottom: 6px;
+
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+
+    /*
+     * Long inquiries should not make cards enormous.
+     */
+    overflow-wrap: anywhere;
+}
+
+.run-url {
+    margin-bottom: 12px;
+
+    color: var(--neon);
+    font-family: var(--font-mono);
+    font-size: 12px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.run-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.run-meta span {
+    position: relative;
+}
+
+.run-meta span + span::before {
+    content: "·";
+
+    position: absolute;
+    left: -11px;
+
+    color: var(--border);
+}
+
+/* Status ------------------------------------------------- */
+
+.run-status {
+    flex-shrink: 0;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 6px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Pending ----------------------------------------------- */
+
+.status-pending {
+    color: #c8b96b;
+    background: rgba(200, 185, 107, 0.07);
+    border-color: rgba(200, 185, 107, 0.2);
+}
+
+/* Running ----------------------------------------------- */
+
+.status-running {
+    color: var(--neon);
+    background: var(--neon-soft);
+    border-color: rgba(57, 255, 106, 0.2);
+}
+
+.status-running .status-dot {
+    box-shadow: 0 0 7px var(--neon-glow);
+    animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.45;
+        transform: scale(0.75);
+    }
+}
+
+/* Succeeded --------------------------------------------- */
+
+.status-succeeded {
+    color: var(--neon);
+    background: rgba(57, 255, 106, 0.055);
+    border-color: rgba(57, 255, 106, 0.16);
+}
+
+/* Failed ------------------------------------------------ */
+
+.status-failed {
+    color: var(--fail-text);
+    background: var(--fail);
+    border-color: rgba(255, 92, 92, 0.18);
+}
+
+/* Empty state -------------------------------------------- */
+
+.empty-state {
+    padding: 64px 24px;
+
+    text-align: center;
+
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.empty-state h2 {
+    margin-bottom: 8px;
+    font-size: 20px;
+}
+
+.empty-state p {
+    max-width: 420px;
+    margin: 0 auto 24px;
+}
+
+.empty-state .btn {
+    display: inline-flex;
+}
+
+/* Responsive -------------------------------------------- */
+
+@media (max-width: 680px) {
+    .run-card {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .run-status {
+        width: 100%;
+        padding-top: 14px;
+
+        border-top: 1px solid var(--border-soft);
+    }
+
+    .status {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .run-card,
+    .status-running .status-dot {
+        transition: none;
+        animation: none;
+    }
+}
+ 

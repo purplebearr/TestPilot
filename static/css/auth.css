@@ -1,0 +1,176 @@
+/* =========================================================
+   Auth (login / register)
+   Uses design tokens from base.css — no new palette introduced.
+   ========================================================= */
+
+.auth-wrap {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  position: relative;
+  background-image:
+    linear-gradient(rgba(57, 255, 106, 0.035) 1px, transparent 1px);
+  background-size: 100% 3px;
+}
+
+.auth-wrap::before {
+  content: "";
+  position: absolute;
+  top: -160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 560px;
+  height: 360px;
+  background: radial-gradient(closest-side, var(--neon-glow), transparent);
+  filter: blur(30px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-2);
+}
+
+.auth-head {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-head h1 {
+  font-size: 24px;
+}
+
+.auth-head p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------
+   Django form.as_p output
+   <p><label for="id_x">Field</label><input ...></p>
+   --------------------------------------------------------- */
+.auth-card form p {
+  margin: 0 0 18px 0;
+}
+
+.auth-card form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.auth-card form input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.auth-card form input::placeholder {
+  color: var(--text-faint);
+}
+
+.auth-card form input:focus {
+  outline: none;
+  border-color: var(--neon);
+  background: var(--surface);
+}
+
+.auth-card form input:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
+/* Django renders field errors as <ul class="errorlist"> before the input */
+.auth-card form .errorlist {
+  list-style: none;
+  margin: 0 0 6px 0;
+  padding: 0;
+}
+
+.auth-card form .errorlist li {
+  font-size: 13px;
+  color: var(--fail-text);
+}
+
+.auth-card form small,
+.auth-card form .helptext {
+  display: block;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 6px;
+}
+
+.auth-card form .btn {
+  margin-top: 8px;
+}
+
+/* ---------------------------------------------------------
+   Top-level message region (htmx target)
+   --------------------------------------------------------- */
+.form-message {
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+.form-message:empty {
+  display: none;
+}
+
+.form-message.error {
+  color: var(--fail-text);
+  background: var(--fail);
+  border: 1px solid var(--fail-text);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.form-message.success {
+  color: var(--neon);
+  background: var(--neon-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+/* ---------------------------------------------------------
+   Footer line
+   --------------------------------------------------------- */
+.auth-foot {
+  text-align: center;
+  font-size: 14px;
+  margin: 24px 0 0 0;
+}
+
+.auth-foot a {
+  color: var(--neon);
+  font-weight: 500;
+}
+
+.auth-foot a:hover {
+  color: var(--neon-hover);
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 24px;
+  }
+}
